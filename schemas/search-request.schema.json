@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object",
+  "required":["hard_filters","soft_preferences","negative_preferences"],
+  "properties":{
+    "hard_filters":{"type":"object","properties":{"price_min":{"type":"number"},"price_max":{"type":"number"},"currency":{"const":"INR"},"availability":{"const":"in_stock"},"garment_type":{"type":"array","items":{"type":"string"}},"occasion":{"type":"array","items":{"type":"string"}},"colour_family":{"type":"array","items":{"type":"string"}},"brand":{"type":"array","items":{"type":"string"}}}},
+    "soft_preferences":{"type":"array","items":{"type":"string"}},
+    "negative_preferences":{"type":"array","items":{"type":"string"}},
+    "anchor_product_id":{"type":["string","null"]},
+    "sort":{"enum":["relevance","price_asc","price_desc","newest"]},
+    "cursor":{"type":["string","null"]}
+  },
+  "additionalProperties":false
+}

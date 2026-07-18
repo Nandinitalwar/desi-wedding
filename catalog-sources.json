@@ -1,0 +1,10 @@
+[
+  {"name":"Aza Fashions","url":"https://www.azafashions.com/","role":"multi-designer marketplace","integration":"affiliate feed or approved catalog export"},
+  {"name":"Pernia's Pop-Up Shop","url":"https://www.perniaspopupshop.com/","role":"multi-designer marketplace","integration":"affiliate feed or approved catalog export"},
+  {"name":"Ogaan","url":"https://www.ogaan.com/","role":"multi-designer retailer","integration":"partnership feed or permissioned ingestion"},
+  {"name":"Kalki Fashion","url":"https://www.kalkifashion.com/","role":"occasionwear retailer","integration":"affiliate feed or approved catalog export"},
+  {"name":"House of Indya","url":"https://www.houseofindya.com/","role":"accessible occasionwear retailer","integration":"affiliate network feed"},
+  {"name":"Torani","url":"https://torani.in/","role":"designer label","integration":"direct partnership or permissioned ingestion"},
+  {"name":"The Loom","url":"https://theloom.in/","role":"multi-brand contemporary Indian wear","integration":"direct partnership or permissioned ingestion"},
+  {"name":"Ekaya Banaras","url":"https://ekaya.in/","role":"textile and sari label","integration":"direct partnership or permissioned ingestion"}
+]

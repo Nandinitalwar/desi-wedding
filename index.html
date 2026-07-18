@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Desi Wedding — conversational discovery for Indian wedding guestwear." />
+    <title>Desi Wedding</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20260717-2" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="#">desi wedding</a>
+      <nav aria-label="Primary navigation">
+        <button class="text-button" data-open-memory>taste <span class="memory-count">0</span></button>
+        <button class="icon-button" data-open-saved aria-label="View saved items">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.4 4.6 13A4.9 4.9 0 0 1 11.5 6l.5.6.5-.6a4.9 4.9 0 0 1 6.9 7Z"/></svg>
+          <span class="saved-count">0</span>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="search-strip" aria-label="Conversational product search">
+        <div class="search-tools">
+          <form class="ask-box" id="ask-form">
+            <input id="ask-input" aria-label="Describe what you're looking for" placeholder="Ask for what you want — pastel, daytime, under ₹15,000…" />
+            <button type="submit" class="ask-submit" aria-label="Search">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4.4 14-2.8-5.1L5 12Z"/></svg>
+            </button>
+          </form>
+          <button class="shade-upload-button" id="open-shade-match"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h3l1.3-2h7.4l1.3 2h3v11H4Z"/><circle cx="12" cy="13" r="3.2"/></svg><span>match a shade</span></button>
+        </div>
+      </section>
+
+      <section class="results" aria-live="polite">
+        <div class="thinking" hidden>
+          <span></span><span></span><span></span>
+          <p>Finding pieces…</p>
+        </div>
+
+        <aside class="filter-panel" id="filter-panel" aria-hidden="true">
+          <div class="filter-head"><h3>Refine</h3><div><button class="filter-reset" id="clear-filters">clear</button><button id="close-filters" aria-label="Close filters">×</button></div></div>
+          <label>Budget <output id="budget-output">Up to ₹10,00,000</output></label>
+          <input id="budget" type="range" min="5000" max="1000000" step="10000" value="1000000" />
+          <div class="budget-presets"><button data-budget="15000">under ₹15k</button><button data-budget="30000">under ₹30k</button><button data-budget="50000">under ₹50k</button><button data-budget="100000">under ₹1L</button></div>
+          <fieldset id="type-filters"><legend>Silhouette</legend>
+            <label><input type="checkbox" value="lehenga" /> Lehenga</label>
+            <label><input type="checkbox" value="saree" /> Saree</label>
+            <label><input type="checkbox" value="set" /> Kurta &amp; sets</label>
+          </fieldset>
+          <fieldset id="colour-filters"><legend>Colour</legend>
+            <label><input type="checkbox" value="pastel" /> Soft &amp; pastel</label>
+            <label><input type="checkbox" value="jewel" /> Jewel tones</label>
+            <label><input type="checkbox" value="neutral" /> Neutrals</label>
+            <div class="shade-options" id="tone-filters" aria-label="Specific shades">
+              <label><input type="checkbox" value="pink" /> Pink</label><label><input type="checkbox" value="red" /> Red</label>
+              <label><input type="checkbox" value="blue" /> Blue</label><label><input type="checkbox" value="green" /> Green</label>
+              <label><input type="checkbox" value="yellow" /> Yellow</label><label><input type="checkbox" value="purple" /> Purple</label>
+              <label><input type="checkbox" value="ivory" /> Ivory</label><label><input type="checkbox" value="gold" /> Gold</label>
+            </div>
+          </fieldset>
+          <fieldset id="occasion-filters"><legend>Occasion</legend>
+            <label><input type="checkbox" value="mehendi" /> Mehendi</label>
+            <label><input type="checkbox" value="sangeet" /> Sangeet</label>
+            <label><input type="checkbox" value="reception" /> Reception</label>
+            <label><input type="checkbox" value="wedding" /> Wedding ceremony</label>
+            <label><input type="checkbox" value="guest" /> Wedding guest</label>
+          </fieldset>
+          <fieldset id="finish-filters"><legend>Finish</legend>
+            <label><input type="checkbox" value="light" /> Quiet / lighter work</label>
+            <label><input type="checkbox" value="ornate" /> Statement / ornate</label>
+            <label><input type="checkbox" id="available-only" /> Available now</label>
+          </fieldset>
+          <fieldset id="brand-filters"><legend>Brand</legend></fieldset>
+          <button class="apply-filters" id="apply-filters">show pieces</button>
+        </aside>
+        <div class="scrim" id="scrim" hidden></div>
+
+        <div class="catalog-toolbar">
+          <div class="category-tabs" aria-label="Categories">
+            <button class="active" data-category="all">all</button>
+            <button data-category="lehenga">lehengas</button>
+            <button data-category="set">sets</button>
+            <button data-category="designers">designers</button>
+            <button data-category="inspiration">celebrity</button>
+          </div>
+          <div class="catalog-actions">
+            <button class="filter-toggle" id="filter-toggle">filter <span>0</span></button>
+            <label>sort <select id="sort"><option value="match">recommended</option><option value="low">price: low to high</option><option value="high">price: high to low</option></select></label>
+          </div>
+        </div>
+        <div class="collection-meta">
+          <p><span id="item-count">9</span> <span id="item-label">styles</span></p>
+        </div>
+        <div class="product-grid" id="product-grid"></div>
+        <p class="catalog-note">Live product links · Check current price and availability with the retailer.</p>
+      </section>
+    </main>
+
+    <dialog class="product-dialog" id="product-dialog">
+      <button class="dialog-close" aria-label="Close">×</button>
+      <div class="dialog-image"><img src="" alt="" /></div>
+      <div class="dialog-content">
+        <p class="dialog-store"></p><h2></h2><p class="dialog-price"></p><p class="dialog-description"></p>
+        <div class="why"><span>Why it fits</span><p></p></div>
+        <div class="refine-box">
+          <label for="refine-input">Want something like this, but different?</label>
+          <div><input id="refine-input" placeholder="More blue, longer sleeves, less work…" /><button id="refine-submit">show me</button></div>
+        </div>
+        <a class="retailer-link" href="#" target="_blank" rel="noopener">view this item <span>↗</span></a>
+      </div>
+    </dialog>
+
+    <dialog class="shade-dialog" id="shade-dialog">
+      <div class="shade-head"><div><p>Photo search</p><h2>Match this shade</h2></div><button id="close-shade-match" aria-label="Close shade matcher">×</button></div>
+      <p class="shade-intro">Photograph the sari, lehenga or fabric in indirect daylight. Then tap the exact area you want to match.</p>
+      <input id="shade-file" type="file" accept="image/*" hidden />
+      <button class="shade-file-button" id="choose-shade-photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h3l1.3-2h7.4l1.3 2h3v11H4Z"/><circle cx="12" cy="13" r="3.2"/></svg><span>take or upload a photo</span></button>
+      <div class="shade-stage" id="shade-stage" hidden>
+        <canvas id="shade-canvas" aria-label="Uploaded fabric. Tap the shade to match."></canvas>
+        <span class="shade-marker" id="shade-marker" hidden></span>
+        <p>Tap directly on the fabric</p>
+      </div>
+      <div class="selected-shade" id="selected-shade" hidden><span id="shade-chip"></span><div><small>Selected shade</small><strong id="shade-name"></strong><em id="shade-hex"></em></div></div>
+      <fieldset class="shade-mode"><legend>Show me</legend><label><input type="radio" name="shade-target" value="outfits" checked /> matching outfits</label><label><input type="radio" name="shade-target" value="blouses" /> blouses &amp; blouse sets</label></fieldset>
+      <button class="apply-shade" id="apply-shade" disabled>find this shade</button>
+      <p class="shade-note">This first version finds the closest catalogue colour family. Lighting can shift colour; confirm the selected swatch before searching.</p>
+    </dialog>
+
+    <aside class="memory-drawer" id="memory-drawer" aria-hidden="true">
+      <div class="drawer-head"><div><p>We remember</p><h2>Your taste</h2></div><button data-close-memory aria-label="Close">×</button></div>
+      <p class="memory-intro">Searches and saved pieces gently reorder Recommended results. Your current request and filters always come first. This stays in this browser.</p>
+      <div class="taste-editor">
+        <p class="taste-kicker">Tune recommendations</p>
+        <div class="taste-group"><span>Colour mood</span><div><button data-taste="colourMood" data-value="pastel">soft</button><button data-taste="colourMood" data-value="jewel">jewel</button><button data-taste="colourMood" data-value="neutral">neutral</button></div></div>
+        <div class="taste-group"><span>Detail</span><div><button data-taste="detail" data-value="minimal">minimal</button><button data-taste="detail" data-value="balanced">balanced</button><button data-taste="detail" data-value="ornate">ornate</button></div></div>
+        <div class="taste-group"><span>Usual budget</span><div><button data-taste="budget" data-value="30000">₹30k</button><button data-taste="budget" data-value="50000">₹50k</button><button data-taste="budget" data-value="100000">₹1L</button></div></div>
+      </div>
+      <div class="taste-learned"><p class="taste-kicker">Learned from your hearts</p><div id="taste-signals" class="taste-signals"></div></div>
+      <p class="taste-kicker taste-memory-label">Recent preferences</p>
+      <div id="memory-list" class="memory-list"></div>
+      <button class="clear-memory" id="clear-memory">reset preferences</button>
+    </aside>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="app.js?v=20260717-3"></script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://indian-wedding.local/schemas/product.schema.json",
+  "title": "Indian Wedding catalog product",
+  "type": "object",
+  "required": ["id", "retailer", "brand", "title", "canonical_url", "images", "price", "availability", "garment_type", "provenance"],
+  "properties": {
+    "id": {"type":"string","minLength":1},
+    "retailer": {"type":"string","minLength":1},
+    "brand": {"type":"string","minLength":1},
+    "title": {"type":"string","minLength":1},
+    "canonical_url": {"type":"string","format":"uri"},
+    "affiliate_url": {"type":["string","null"],"format":"uri"},
+    "description": {"type":"string"},
+    "images": {
+      "type":"array","minItems":1,
+      "items":{"type":"object","required":["url","source"],"properties":{"url":{"type":"string","format":"uri"},"source":{"type":"string"},"alt":{"type":"string"}}}
+    },
+    "price": {"type":"object","required":["amount","currency"],"properties":{"amount":{"type":"number","minimum":0},"currency":{"const":"INR"},"original_amount":{"type":["number","null"]}}},
+    "availability": {"enum":["in_stock","made_to_order","preorder","out_of_stock"]},
+    "sizes": {"type":"array","items":{"type":"string"}},
+    "garment_type": {"enum":["lehenga","sari","pre_draped_sari","anarkali","sharara","kurta_set","skirt_set","gown","dress","co_ord","other"]},
+    "silhouette": {"type":"array","items":{"type":"string"}},
+    "colour_family": {"type":"array","items":{"type":"string"}},
+    "raw_colour": {"type":"string"},
+    "occasions": {"type":"array","items":{"enum":["wedding","reception","sangeet","mehendi","haldi","cocktail","engagement","wedding_guest","festive"]}},
+    "materials": {"type":"array","items":{"type":"string"}},
+    "embellishments": {"type":"array","items":{"type":"string"}},
+    "style_tags": {"type":"array","items":{"type":"string"}},
+    "provenance": {
+      "type":"object","required":["source_type","source_id","fetched_at","permission_status"],
+      "properties":{"source_type":{"enum":["merchant_feed","affiliate_feed","official_api","permissioned_adapter"]},"source_id":{"type":"string"},"fetched_at":{"type":"string","format":"date-time"},"permission_status":{"const":"approved"}}
+    }
+  },
+  "additionalProperties": false
+}
