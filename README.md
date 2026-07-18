@@ -15,14 +15,17 @@ python3 -m http.server 4180
 
 Then visit `http://localhost:4180`.
 
-## Develop with Kimi K3 through OpenRouter
+## Develop with Kimi K3 through OpenRouter and Codex
 
-This repository includes an `opencode.json` that selects `openrouter/moonshotai/kimi-k3` by default.
+Codex supports custom model providers. On this Mac, the included profile has already been copied to `~/.codex/kimi-k3.config.toml`.
 
 1. Create an API key at [OpenRouter](https://openrouter.ai/settings/keys) and set a spending limit.
-2. From this folder, run `opencode`.
-3. Enter `/connect`, choose **OpenRouter**, and paste the key when prompted. OpenCode stores the credential outside this repository.
-4. Start describing the change you want. Use `/models` if you need to reselect **Kimi K3**.
+2. Set it only in your current Terminal session: `export OPENROUTER_API_KEY='your-key'`.
+3. Start a Kimi-powered Codex session: `codex --profile kimi-k3 -C /Users/nandinitalwar/indian-wedding`.
+
+For another computer, first copy `docs/kimi-k3-codex-profile.toml` to `~/.codex/kimi-k3.config.toml`.
+
+The repository also includes `opencode.json` as an optional OpenCode configuration. Codex is the recommended path when you want to keep using Codex tools and workflows.
 
 Never paste or commit the API key into this repository.
 

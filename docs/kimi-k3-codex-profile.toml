@@ -1,0 +1,12 @@
+model = "moonshotai/kimi-k3"
+model_provider = "openrouter"
+
+[model_providers.openrouter]
+name = "OpenRouter"
+base_url = "https://openrouter.ai/api/v1"
+env_key = "OPENROUTER_API_KEY"
+env_key_instructions = "Create a limited key at https://openrouter.ai/settings/keys and export OPENROUTER_API_KEY."
+wire_api = "responses"
+supports_websockets = false
+http_headers = { "HTTP-Referer" = "https://github.com/Nandinitalwar/desi-wedding", "X-Title" = "Desi Wedding" }
+
