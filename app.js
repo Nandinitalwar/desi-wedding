@@ -18,9 +18,15 @@ let activeView='products';
 let shadeSelection=null;
 let shadeTarget='outfits';
 
-const state={query:'',budget:1000000,types:[],colours:[],tones:[],excludedTones:[],details:[],availableOnly:false,brands:[],occasions:[],sort:'match',visibleCount:48,saved:JSON.parse(localStorage.getItem('iw-saved')||'[]').map(String),memory:JSON.parse(localStorage.getItem('iw-memory')||'[]'),taste:JSON.parse(localStorage.getItem('iw-taste')||'{"colourMood":"","detail":"","budget":null}'),active:null};
+const state={query:'',budget:1000000,types:[],colours:[],tones:[],excludedTones:[],details:[],availableOnly:false,brands:[],occasions:[],sort:'match',visibleCount:48,saved:JSON.parse(localStorage.getItem('iw-saved')||'[]').map(String),cart:JSON.parse(localStorage.getItem('dw-cart')||'[]'),memory:JSON.parse(localStorage.getItem('iw-memory')||'[]'),taste:JSON.parse(localStorage.getItem('iw-taste')||'{"colourMood":"","detail":"","budget":null}'),active:null};
+if(!Array.isArray(state.cart))state.cart=[];
 const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
 const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n);
+
+const mem0UserId=localStorage.getItem('iw-user-id')||(()=>{const id=crypto.randomUUID();localStorage.setItem('iw-user-id',id);return id})();
+let mem0MemoryText='';
+function mem0Remember(text){fetch('/api/memory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:mem0UserId,text})}).catch(()=>{})}
+function mem0Recall(query){fetch(`/api/memory/search?userId=${encodeURIComponent(mem0UserId)}&q=${encodeURIComponent(query)}`).then(r=>r.ok?r.json():null).then(data=>{if(!data)return;mem0MemoryText=(data.results||[]).join(' ').toLowerCase();if(state.sort==='match')renderCurrentProducts()}).catch(()=>{})}
 
 function detailLevel(p){return /sequin|crystal|zardozi|mirror|bead|embellish|heavy|cutdana|embroider/.test(`${p.name} ${p.desc}`.toLowerCase())?'ornate':'light'}
 function filteredProducts(){
@@ -47,7 +53,7 @@ function buildTasteProfile(){
   const savedProducts=products.filter(item=>savedIds.has(String(item.id)));
   const positiveMemories=state.memory.filter(item=>!/^less\s+/i.test(item.value)).map(item=>item.value).join(' ').toLowerCase();
   const count=values=>values.reduce((map,value)=>map.set(value,(map.get(value)||0)+1),new Map());
-  return {memoryText:positiveMemories,brands:count(savedProducts.map(item=>item.brand||item.store)),types:count(savedProducts.map(item=>item.type)),tones:count(savedProducts.map(item=>item.tone))}
+  return {memoryText:`${positiveMemories} ${mem0MemoryText}`,brands:count(savedProducts.map(item=>item.brand||item.store)),types:count(savedProducts.map(item=>item.type)),tones:count(savedProducts.map(item=>item.tone))}
 }
 function tasteScore(product,taste){
   let score=0;
@@ -77,10 +83,11 @@ function render(list=filteredProducts(),options={}){
       <a href="${p.url}" target="_blank" rel="noopener" aria-label="View ${p.name} at ${p.store}"><img src="${p.image}" alt="${p.name}" loading="lazy"></a>
       <button class="save-button ${state.saved.includes(String(p.id))?'saved':''}" aria-label="Save ${p.name}" data-save="${p.id}"><svg viewBox="0 0 24 24"><path d="M12 20.4 4.6 13A4.9 4.9 0 0 1 11.5 6l.5.6.5-.6a4.9 4.9 0 0 1 6.9 7Z"/></svg></button>
     </div>
-    <div class="product-info"><p class="product-store">${p.brand||p.store}</p><h3 class="product-name"><a href="${p.url}" target="_blank" rel="noopener">${p.name}</a></h3><div class="product-bottom"><span>${money(p.price)}</span><button class="similar-button" data-similar="${p.id}">find similar</button></div></div>
+    <div class="product-info"><p class="product-store">${p.brand||p.store}</p><h3 class="product-name"><a href="${p.url}" target="_blank" rel="noopener">${p.name}</a></h3><div class="product-bottom"><span>${money(p.price)}</span><button class="similar-button" data-similar="${p.id}">find similar</button></div><button class="card-bag-button" data-add-cart="${p.id}">${state.cart.some(item=>String(item.id)===String(p.id))?'add another':'add to bag'}</button></div>
   </article>`).join('')+(visible.length<list.length?`<button class="load-products" id="load-products">show ${Math.min(48,list.length-visible.length)} more</button>`:''):`<p class="no-results">No pieces match those filters.</p>`;
   $$('[data-save]').forEach(b=>b.onclick=()=>toggleSave(b.dataset.save,b));
   $$('[data-similar]').forEach(b=>b.onclick=()=>openProduct(b.dataset.similar));
+  $$('[data-add-cart]').forEach(b=>b.onclick=()=>addToCart(b.dataset.addCart));
   $('#load-products')?.addEventListener('click',()=>{state.visibleCount+=48;render(list,options)});
 }
 
@@ -106,8 +113,8 @@ function renderShops(query=''){
 function activateCategory(category){$$('[data-category]').forEach(x=>x.classList.toggle('active',x.dataset.category===category));}
 
 function toggleSave(id,button){id=String(id);state.saved=state.saved.includes(id)?state.saved.filter(x=>x!==id):[...state.saved,id];localStorage.setItem('iw-saved',JSON.stringify(state.saved));button.classList.toggle('saved',state.saved.includes(id));updateCounts();renderMemory();if(state.sort==='match')renderCurrentProducts();toast(state.saved.includes(id)?'Taste updated':'Removed')}
-function updateCounts(){const tuned=Object.values(state.taste).filter(Boolean).length;$$('.saved-count').forEach(el=>{el.textContent=state.saved.length;el.style.display=state.saved.length?'inline':'none'});$('.memory-count').textContent=state.memory.length+tuned}
-function remember(label,value){if(!value)return;state.memory=state.memory.filter(x=>x.label!==label);state.memory.push({label,value});localStorage.setItem('iw-memory',JSON.stringify(state.memory));updateCounts();renderMemory()}
+function updateCounts(){const tuned=Object.values(state.taste).filter(Boolean).length;$$('.saved-count').forEach(el=>{el.textContent=state.saved.length;el.style.display=state.saved.length?'inline':'none'});$('.memory-count').textContent=state.memory.length+tuned;const cartCount=state.cart.reduce((sum,item)=>sum+(+item.quantity||0),0);$$('.cart-count').forEach(el=>{el.textContent=cartCount;el.style.display=cartCount?'inline':'none'})}
+function remember(label,value){if(!value)return;state.memory=state.memory.filter(x=>x.label!==label);state.memory.push({label,value});localStorage.setItem('iw-memory',JSON.stringify(state.memory));updateCounts();renderMemory();mem0Remember(`User's ${label}: ${value}`)}
 
 function ask(query){
   if(!query.trim())return; state.query=query.trim();
@@ -143,11 +150,12 @@ function interpret(q){
   if(state.colours.length)remember('colour mood',state.colours[0]);
   if(price)remember('budget',`under ${money(state.budget)}`);
   updateFilterCount();
+  mem0Recall(q);
 }
 function updateFilterCount(){const count=state.types.length+state.colours.length+state.tones.length+state.excludedTones.length+state.details.length+(state.availableOnly?1:0)+state.brands.length+state.occasions.length+(state.budget<1000000?1:0);$('.filter-toggle span').textContent=count}
 function renderBrandFilters(){const brands=[...new Set(products.map(p=>p.brand||p.store))].sort();$('#brand-filters').innerHTML='<legend>Brand</legend>'+brands.map(brand=>`<label><input type="checkbox" value="${brand}"> ${brand}</label>`).join('')}
 
-function openProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;state.active=p;const d=$('#product-dialog');$('.dialog-image img').src=p.image;$('.dialog-image img').alt=p.name;$('.dialog-store').textContent=p.store;$('.dialog-content h2').textContent=p.name;$('.dialog-price').textContent=money(p.price);$('.dialog-description').textContent=p.desc;$('.why p').textContent=p.why;$('.retailer-link').href=p.url;$('#refine-input').value='';d.showModal()}
+function openProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;state.active=p;const d=$('#product-dialog');$('.dialog-image img').src=p.image;$('.dialog-image img').alt=p.name;$('.dialog-store').textContent=p.store;$('.dialog-content h2').textContent=p.name;$('.dialog-price').textContent=money(p.price);$('.dialog-description').textContent=p.desc;$('.why p').textContent=p.why;$('.retailer-link').href=p.url;$('#add-active-to-cart').textContent=state.cart.some(item=>String(item.id)===String(p.id))?'add another':'add to bag';$('#refine-input').value='';d.showModal()}
 function refine(){const q=$('#refine-input').value.trim();if(!q)return;const p=state.active;$('#product-dialog').close();remember('latest refinement',q);state.types=[p.type];state.query=`Something like ${p.name}, but ${q}`;$('#ask-input').value=state.query;products.forEach(x=>{let score=x.type===p.type?94:72;if(x.tone===p.tone)score+=3;if((x.brand||x.store)===(p.brand||p.store))score+=2;if(q.toLowerCase().includes('less work')&&/heavy|sequin|crystal|embellished|maximal/.test(`${x.name} ${x.desc}`.toLowerCase()))score-=18;x.match=score});ask(state.query)}
 
 function renderMemory(){
@@ -161,7 +169,29 @@ function renderMemory(){
   $$('[data-forget]').forEach(b=>b.onclick=()=>{state.memory.splice(+b.dataset.forget,1);localStorage.setItem('iw-memory',JSON.stringify(state.memory));renderMemory();updateCounts();if(state.sort==='match')renderCurrentProducts()})
 }
 function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1400)}
-function drawer(open){$('#memory-drawer').classList.toggle('open',open);$('#memory-drawer').setAttribute('aria-hidden',!open);$('#scrim').hidden=!open}
+function drawer(open){if(open){closeFilters();cartDrawer(false)}$('#memory-drawer').classList.toggle('open',open);$('#memory-drawer').setAttribute('aria-hidden',!open);$('#scrim').hidden=!open}
+
+function persistCart(){localStorage.setItem('dw-cart',JSON.stringify(state.cart));updateCounts();renderCart()}
+function addToCart(id){
+  id=String(id);const existing=state.cart.find(item=>String(item.id)===id);
+  if(existing)existing.quantity=Math.min(9,(+existing.quantity||0)+1);else state.cart.push({id,quantity:1});
+  persistCart();$$('[data-add-cart]').filter(button=>String(button.dataset.addCart)===id).forEach(button=>button.textContent='add another');if(state.active&&String(state.active.id)===id)$('#add-active-to-cart').textContent='add another';toast('Added to your bag')
+}
+function changeCartQuantity(id,change){
+  const item=state.cart.find(entry=>String(entry.id)===String(id));if(!item)return;
+  item.quantity=Math.max(0,Math.min(9,(+item.quantity||0)+change));if(!item.quantity)state.cart=state.cart.filter(entry=>String(entry.id)!==String(id));persistCart()
+}
+function removeFromCart(id){state.cart=state.cart.filter(item=>String(item.id)!==String(id));persistCart();toast('Removed from bag')}
+function renderCart(){
+  if(!Array.isArray(state.cart))state.cart=[];
+  state.cart=state.cart.filter(item=>Number.isFinite(+item.quantity)&&+item.quantity>0).map(item=>({id:String(item.id),quantity:Math.min(9,Math.floor(+item.quantity))}));
+  const entries=state.cart.map(item=>({item,product:products.find(product=>String(product.id)===item.id)})).filter(entry=>entry.product);
+  const groups=[...entries.reduce((map,entry)=>{const brand=entry.product.brand||entry.product.store;if(!map.has(brand))map.set(brand,[]);map.get(brand).push(entry);return map},new Map())];
+  $('#cart-items').innerHTML=groups.length?groups.map(([brand,items])=>`<section class="cart-brand"><h3>${brand}</h3>${items.map(({item,product})=>`<article class="cart-item"><a href="${product.url}" target="_blank" rel="noopener"><img src="${product.image}" alt=""></a><div><h4>${product.name}</h4><p>${money(product.price)}</p><div class="cart-item-actions"><div class="quantity-control" aria-label="Quantity"><button data-cart-minus="${product.id}" aria-label="Reduce quantity">−</button><span>${item.quantity}</span><button data-cart-plus="${product.id}" aria-label="Increase quantity">+</button></div><button class="cart-remove" data-cart-remove="${product.id}">remove</button></div><a class="cart-brand-link" href="${product.url}" target="_blank" rel="noopener">buy from brand ↗</a></div></article>`).join('')}</section>`).join(''):'<p class="cart-empty">Your bag is waiting for something lovely.</p>';
+  const subtotal=entries.reduce((sum,{item,product})=>sum+(product.price*item.quantity),0);$('#cart-subtotal').textContent=money(subtotal);$('#cart-summary').hidden=!entries.length;
+  $$('[data-cart-minus]').forEach(button=>button.onclick=()=>changeCartQuantity(button.dataset.cartMinus,-1));$$('[data-cart-plus]').forEach(button=>button.onclick=()=>changeCartQuantity(button.dataset.cartPlus,1));$$('[data-cart-remove]').forEach(button=>button.onclick=()=>removeFromCart(button.dataset.cartRemove))
+}
+function cartDrawer(open){if(open){closeFilters();$('#memory-drawer').classList.remove('open');$('#memory-drawer').setAttribute('aria-hidden','true')}$('#cart-drawer').classList.toggle('open',open);$('#cart-drawer').setAttribute('aria-hidden',!open);$('#scrim').hidden=!open;if(open)renderCart()}
 
 const shadePalette=[
   ['pink','#dc8fac'],['red','#a92f3a'],['blue','#416eae'],['green','#568066'],['yellow','#dfba45'],['orange','#cf7437'],
@@ -214,18 +244,19 @@ function syncFilterControls(){
   $$('#occasion-filters input').forEach(input=>input.checked=state.occasions.includes(input.value));
   $$('#brand-filters input').forEach(input=>input.checked=state.brands.includes(input.value));
 }
-$('#filter-toggle').onclick=()=>{syncFilterControls();$('#filter-panel').classList.add('open');$('#filter-panel').setAttribute('aria-hidden','false');$('#scrim').hidden=false};
+$('#filter-toggle').onclick=()=>{drawer(false);cartDrawer(false);syncFilterControls();$('#filter-panel').classList.add('open');$('#filter-panel').setAttribute('aria-hidden','false');$('#scrim').hidden=false};
 function closeFilters(){$('#filter-panel').classList.remove('open');$('#filter-panel').setAttribute('aria-hidden','true');$('#scrim').hidden=true}
-$('#close-filters').onclick=closeFilters;$('#scrim').onclick=()=>{closeFilters();drawer(false)};
+$('#close-filters').onclick=closeFilters;$('#scrim').onclick=()=>{closeFilters();drawer(false);cartDrawer(false)};
 $('#budget').oninput=e=>$('#budget-output').textContent=`Up to ${money(+e.target.value)}`;
 $$('[data-budget]').forEach(button=>button.onclick=()=>{$('#budget').value=button.dataset.budget;$('#budget-output').textContent=`Up to ${money(+button.dataset.budget)}`;$$('[data-budget]').forEach(x=>x.classList.toggle('active',x===button))});
 $('#apply-filters').onclick=()=>{state.budget=+$('#budget').value;state.types=$$('#type-filters input:checked').map(x=>x.value);state.colours=$$('#colour-filters > label input:checked').map(x=>x.value);state.tones=$$('#tone-filters input:checked').map(x=>x.value);state.excludedTones=[];state.details=$$('#finish-filters input:not(#available-only):checked').map(x=>x.value);state.availableOnly=$('#available-only').checked;state.occasions=$$('#occasion-filters input:checked').map(x=>x.value);state.brands=$$('#brand-filters input:checked').map(x=>x.value);state.visibleCount=48;if(state.budget<1000000)remember('budget',`under ${money(state.budget)}`);updateFilterCount();renderCurrentProducts();closeFilters()};
 $('#clear-filters').onclick=()=>{state.budget=1000000;state.types=[];state.colours=[];state.tones=[];state.excludedTones=[];state.details=[];state.availableOnly=false;state.occasions=[];state.brands=[];$('#budget').value=1000000;$('#budget-output').textContent=`Up to ${money(1000000)}`;$$('#filter-panel input[type="checkbox"]').forEach(x=>x.checked=false);$$('[data-budget]').forEach(x=>x.classList.remove('active'));state.visibleCount=48;updateFilterCount();renderCurrentProducts()};
 $('#sort').onchange=e=>{state.sort=e.target.value;state.visibleCount=48;renderCurrentProducts()};
 $$('[data-category]').forEach(b=>b.onclick=()=>{const category=b.dataset.category;activateCategory(category);if(category==='inspiration'){location.hash='celebrity';renderInspirations();return}if(category==='designers'){location.hash='designers';$('#ask-input').value='';$('#ask-input').placeholder='Search designers, bridal, pastel, sari, or price tier…';renderShops();return}history.replaceState(null,'',location.pathname);$('#ask-input').placeholder='Ask for what you want — pastel, daytime, under ₹15,000…';state.types=category==='all'?[]:[category];state.visibleCount=48;updateFilterCount();render()});
-$('.dialog-close').onclick=()=>$('#product-dialog').close();$('#refine-submit').onclick=refine;$('#refine-input').onkeydown=e=>{if(e.key==='Enter')refine()};
+$('.dialog-close').onclick=()=>$('#product-dialog').close();$('#add-active-to-cart').onclick=()=>state.active&&addToCart(state.active.id);$('#refine-submit').onclick=refine;$('#refine-input').onkeydown=e=>{if(e.key==='Enter')refine()};
 $('#open-shade-match').onclick=()=>$('#shade-dialog').showModal();$('#close-shade-match').onclick=()=>$('#shade-dialog').close();$('#choose-shade-photo').onclick=()=>$('#shade-file').click();$('#shade-file').onchange=e=>loadShadePhoto(e.target.files[0]);$('#shade-canvas').onclick=sampleShade;$('#apply-shade').onclick=applyShadeMatch;
 $$('[data-open-memory]').forEach(b=>b.onclick=()=>drawer(true));$$('[data-close-memory]').forEach(b=>b.onclick=()=>drawer(false));
+$$('[data-open-cart]').forEach(b=>b.onclick=()=>cartDrawer(true));$$('[data-close-cart]').forEach(b=>b.onclick=()=>cartDrawer(false));
 $$('[data-taste]').forEach(button=>button.onclick=()=>{
   const key=button.dataset.taste;const value=button.dataset.value;
   state.taste[key]=String(state.taste[key]||'')===value?(key==='budget'?null:''):(key==='budget'?+value:value);
@@ -235,7 +266,8 @@ $('#clear-memory').onclick=()=>{state.memory=[];state.taste={colourMood:'',detai
 $('[data-open-saved]').onclick=()=>{state.visibleCount=48;render(products.filter(p=>state.saved.includes(String(p.id))));$('#product-grid').scrollIntoView({behavior:'smooth'})};
 
 $('.catalog-toolbar').hidden=true;$('.collection-meta').hidden=true;$('#product-grid').hidden=true;$('.thinking').hidden=false;
-renderMemory();updateCounts();updateFilterCount();
+renderMemory();renderCart();updateCounts();updateFilterCount();
+mem0Recall('wedding guest outfit style preferences');
 Promise.all([
   fetch('instagram-accounts.json').then(r=>r.json()),
   fetch('instagram-looks.json').then(r=>r.json()),
@@ -251,7 +283,7 @@ Promise.all([
   shoppingSources=shops;
   if(catalog.length)products=catalog;
   renderBrandFilters();
-  renderMemory();updateCounts();
+  renderMemory();renderCart();updateCounts();
   $('.thinking').hidden=true;$('.catalog-toolbar').hidden=false;$('.collection-meta').hidden=false;$('#product-grid').hidden=false;
   if(location.hash==='#celebrity'){activateCategory('inspiration');renderInspirations()}
   else if(location.hash==='#designers'){activateCategory('designers');$('#ask-input').placeholder='Search designers, bridal, pastel, sari, or price tier…';renderShops()}

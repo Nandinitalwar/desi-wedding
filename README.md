@@ -1,19 +1,38 @@
 # Desi Wedding
 
-A responsive, dependency-free interaction prototype for conversational Indian wedding guestwear discovery.
+See [CHECKOUT_PILOT_PLAN.md](CHECKOUT_PILOT_PLAN.md) for the verified-partner native
+checkout and reliability rollout.
+
+A responsive interaction prototype for conversational Indian wedding guestwear discovery.
 
 ![Desi Wedding catalogue](docs/desi-wedding-home.png)
 
+[Watch the 58-second product demo](assets/desi-wedding-demo.mp4) (720p, web-optimized MP4).
+
 ## Run locally
 
-Open `index.html` directly, or run a static server:
+The app is a static front end, plus a small Express server that proxies taste-memory calls
+to [Mem0](https://mem0.ai) so the "why this matches you" ranking can remember what a user
+likes across visits.
 
 ```bash
 cd /Users/nandinitalwar/indian-wedding
-python3 -m http.server 4180
+npm install
+cp .env.example .env   # then paste your Mem0 API key into .env
+npm start
 ```
 
 Then visit `http://localhost:4180`.
+
+Get an API key from the [Mem0 dashboard](https://app.mem0.ai) (free tier available). Never
+paste or commit the key into this repository — `.env` is git-ignored.
+
+Without `MEM0_API_KEY` set, the server still runs and serves the site fine; it just responds
+`503` on the `/api/memory*` routes, so taste recommendations fall back to the existing
+localStorage-only heuristics (saved items, explicit taste buttons, session memory chips).
+
+If you just want the static files with no memory backend at all, `python3 -m http.server 4180`
+still works as before.
 
 ## Develop with Kimi K3 through OpenRouter and Codex
 
